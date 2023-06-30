@@ -12,7 +12,9 @@
     ]
   },
   "ExpandedNodes": [
-    ""
+    "",
+    "\\include\\ast",
+    "\\src\\ast"
   ],
   "SelectedNode": "\\src",
   "PreviewInSolutionExplorer": false
