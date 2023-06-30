@@ -131,7 +131,7 @@ calc::ast::Expression::Value::operator *(const Value& other) const
 	else if (isInt(_type) && isFloat(other._type))
 		throw std::bad_cast();
 
-	return *this;
+	return tmp;
 }
 
 calc::ast::Expression::Value

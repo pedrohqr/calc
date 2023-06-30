@@ -14,7 +14,12 @@
   "ExpandedNodes": [
     "",
     "\\include\\ast",
-    "\\src\\ast"
+    "\\include\\parser",
+    "\\include\\symbol",
+    "\\include\\util",
+    "\\src\\ast",
+    "\\src\\parser",
+    "\\src\\symbol"
   ],
   "SelectedNode": "\\src",
   "PreviewInSolutionExplorer": false
