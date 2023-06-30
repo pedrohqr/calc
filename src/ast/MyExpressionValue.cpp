@@ -62,11 +62,21 @@ calc::ast::Expression::Value::castTo(const Type* required_type) const
 
 calc::ast::Expression::Value
 calc::ast::Expression::Value::operator +(const Value& other) const
-{
+{	//TODO
 	Expression::Value tmp{*this};
 
 	if (isInt(_type) && isInt(other._type))
+	{
+		/*if (std::get<IntMatrix>(_value).rows() == std::get<IntMatrix>(_value).cols() == 1 && std::get<IntMatrix>(other._value).rows() != 1 || std::get<IntMatrix>(other._value).cols() != 1)
+		{	
+			const IntMatrix& matrix = std::get<IntMatrix>(other._value);
+			IntMatrix aux{ matrix.rows(), matrix.cols() };
+			for (size_t i = 0, sr = matrix.rows(); i < sr; ++i)
+				for (size_t j = 0, sc = matrix.cols(); j < sr; ++j)
+					aux(i,j) = std::get<IntMatrix>(_value) + matrix(i, j);
+		}*/
 		tmp._value = std::get<IntMatrix>(_value) + std::get<IntMatrix>(other._value);
+	}
 	else if (isFloat(_type) && isFloat(other._type))
 		tmp._value = std::get<FloatMatrix>(_value) + std::get<FloatMatrix>(other._value);
 	else if (isFloat(_type) && isInt(other._type))
@@ -79,15 +89,48 @@ calc::ast::Expression::Value::operator +(const Value& other) const
 
 calc::ast::Expression::Value
 calc::ast::Expression::Value::operator -(const Value& other) const
-{
-	// TODO
-	return *this;
+{	//TODO
+	Expression::Value tmp{*this};
+
+	if (isInt(_type) && isInt(other._type))
+		tmp._value = std::get<IntMatrix>(_value) - std::get<IntMatrix>(other._value);
+	else if (isFloat(_type) && isFloat(other._type))
+		tmp._value = std::get<FloatMatrix>(_value) - std::get<FloatMatrix>(other._value);
+	else if (isFloat(_type) && isInt(other._type))
+		tmp._value = std::get<FloatMatrix>(_value) - std::get<FloatMatrix>(other.castTo(_type)._value);
+	else if (isInt(_type) && isFloat(other._type))
+		throw std::bad_cast();
+	
+	return tmp;
 }
 
 calc::ast::Expression::Value
 calc::ast::Expression::Value::operator *(const Value& other) const
 {
 	// TODO
+	Expression::Value tmp{*this};
+
+	if (isInt(_type) && isInt(other._type))
+	{
+		if (std::get<IntMatrix>(_value).cols() != std::get<IntMatrix>(other._value).rows())
+			throw std::length_error("Cols and Rows differents");
+		tmp._value = std::get<IntMatrix>(_value) * std::get<IntMatrix>(other._value);
+	}
+	else if (isFloat(_type) && isFloat(other._type))
+	{
+		if (std::get<FloatMatrix>(_value).cols() != std::get<FloatMatrix>(other._value).rows())
+			throw std::length_error("Cols and Rows differents");
+		tmp._value = std::get<FloatMatrix>(_value) - std::get<FloatMatrix>(other._value);
+	}
+	else if (isFloat(_type) && isInt(other._type))
+	{
+		if (std::get<FloatMatrix>(_value).cols() != std::get<IntMatrix>(other._value).rows())
+			throw std::length_error("Cols and Rows differents");
+		tmp._value = std::get<FloatMatrix>(_value) - std::get<FloatMatrix>(other.castTo(_type)._value);
+	}
+	else if (isInt(_type) && isFloat(other._type))
+		throw std::bad_cast();
+
 	return *this;
 }
 
