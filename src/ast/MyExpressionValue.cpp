@@ -120,13 +120,13 @@ calc::ast::Expression::Value::operator *(const Value& other) const
 	{
 		if (std::get<FloatMatrix>(_value).cols() != std::get<FloatMatrix>(other._value).rows())
 			throw std::length_error("Cols and Rows differents");
-		tmp._value = std::get<FloatMatrix>(_value) - std::get<FloatMatrix>(other._value);
+		tmp._value = std::get<FloatMatrix>(_value) * std::get<FloatMatrix>(other._value);
 	}
 	else if (isFloat(_type) && isInt(other._type))
 	{
 		if (std::get<FloatMatrix>(_value).cols() != std::get<IntMatrix>(other._value).rows())
 			throw std::length_error("Cols and Rows differents");
-		tmp._value = std::get<FloatMatrix>(_value) - std::get<FloatMatrix>(other.castTo(_type)._value);
+		tmp._value = std::get<FloatMatrix>(_value) * std::get<FloatMatrix>(other.castTo(_type)._value);
 	}
 	else if (isInt(_type) && isFloat(other._type))
 		throw std::bad_cast();

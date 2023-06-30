@@ -114,6 +114,7 @@ public:
 
   Matrix operator +(const Matrix&) const;
   Matrix operator -(const Matrix&) const;
+  Matrix operator [](const T&) const;
   Matrix operator *(const Matrix&) const;
   Matrix operator *(const T&) const;
   Matrix* operator &();
@@ -194,10 +195,10 @@ template <typename T>
 Matrix<T>&
 Matrix<T>::operator +=(const Matrix& b)
 {
-#ifdef _DEBUG
+/*#ifdef _DEBUG
     if (_m != b._m || _n != b._n)
         matrixDimensionMustAgree(_m, _n, b._m, b._n);
-#endif // _DEBUG
+#endif*/ // _DEBUG
     for (size_t s = _m * _n, i{}; i < s; ++i)
         _data[i] += b._data[i];
     return *this;
@@ -270,21 +271,30 @@ Matrix<T>::operator -(const Matrix& b) const
     return c;
 }
 
+template <typename T>
+Matrix<T>
+Matrix<T>::operator [](const T& a) const
+{
+    return _data[a];
+}
+
 template<typename T>
 Matrix<T>
 Matrix<T>::operator *(const Matrix& b) const
 {
-#ifdef _DEBUG
+/*#ifdef _DEBUG
     if (_n != b._m)
         matrixDimensionMustAgree(_m, _n, b._m, b._n);
-#endif // _DEBUG
+#endif */// _DEBUG
     Matrix<T> tmp{_m, b._n};
+    //T* _data = new math::Matrix<T>;
 
     for (size_t row = 0; row < _m; ++row)
         for (size_t col = 0; col < b._n; ++col)
             for (size_t k = 0; k < _n; ++k)
-                tmp[row][col] += _data[row][k] * b[k][col];
+                tmp(row, col) = _data[row] * b(k,col);
 
+    //delete _data;
     return tmp;
 }
 
