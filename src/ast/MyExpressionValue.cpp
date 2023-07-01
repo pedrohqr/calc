@@ -299,28 +299,90 @@ calc::ast::Expression::Value::vertcat(const Value& other) const
 calc::ast::Expression::Value
 calc::ast::Expression::Value::operator ()(const Value& other) const
 {
-	// TODO
-	return *this;
+	//TODO -> tem que ainda aceitar um vetor e retornar as posições colocadas no vetor e também tem que devolver uma sub-matriz a partir de um elemento x até y, ou seja 2:5(segunda linha até a 5 coluna)
+	Expression::Value newValue{*this};
+
+	std::visit([&](auto&& Me, auto&& Other)
+		{
+			if (Other.rows() != 1 && Other.cols() != 1 || Other(0, 0) >= Me.rows() * Me.cols())
+				throw std::out_of_range("Invalid range");
+			else if (!isInt(other._type))
+				throw std::invalid_argument("Type is not int");
+			else
+			{
+				std::decay_t<decltype(Me)> tmp{1, 1};
+
+				for (size_t i = 0, sr = Me.rows();i < sr; ++i)
+					for (size_t j = 0, sc = Me.cols(); j < sc; ++j)
+					{
+						if ((i * sc + j) == Other(0, 0))
+						{
+							tmp(0, 0) = Me(i, j);
+							newValue._value = tmp;
+							break;
+						}
+					}
+			}
+		},_value, other._value);
+	
+	return newValue;
 }
 
 calc::ast::Expression::Value
 calc::ast::Expression::Value::operator ()(const Value& l1, const Value& l2) const
 {
 	// TODO
-	return *this;
+	// Ele vai devolver i elemento localizado na linha x e na coluna y.
+	// Se ele tiver matrix vazia, devolve essa matriz vazia
+	// a(1:2, [3,0,2]) ela tem q se restringir da linha 1 até 2 e devolver as colunas 3, 0 e 2 e devolve uma submatriz de qualquer tipo
+	// Para [3, 0 ,2 ] ele só pode ser vetor, ou seja, não pode ter mais do que 1 linha, se não é erro
+	Expression::Value newValue;
+	
+	std::visit([&](auto&& Me, auto&& Otherl, auto&& Otherc)
+		{
+			if (isVoid(l1._type) || isVoid(l2._type))
+			{
+				std::decay_t<decltype(Me)> tmp{};
+				newValue._value = tmp;
+			}
+			else if (Me.rows() > Otherl.rows() || Me.cols() > Otherl.cols() || Me.rows() > Otherc.rows() || Me.cols() > Otherc.cols())
+				throw std::length_error("Rows or Cols is invalid");
+
+
+		}, _value, l1._value, l2._value);
+	
+	return newValue;
 }
 
 calc::ast::Expression::Value
 calc::ast::Expression::Value::rows(const Value& r) const
 {
 	// TODO
-	return *this;
+	// Operador :, ou seja, ele tem que imprimir todas as linhas
+	// Ele aceita um matriz de linha 1 somente, de resto é erro
+	
+	Expression::Value newValue;
+	
+	std::visit([&](auto&& Me, auto&& OtherR)
+		{
+			std::decay_t<decltype(Me)> tmp{Me};
+			if (r._type == ":")
+				for (size_t i = 0, sr = Me.rows(); i < sr; ++i)
+				{
+					tmp(i, 0) = Me(i, 0);
+					newValue._value = tmp;
+				}
+
+		}, _value, r._value);
+
+	return newValue;
 }
 
 calc::ast::Expression::Value
 calc::ast::Expression::Value::cols(const Value& c) const
 {
 	// TODO
+	// Operador :, ou seja, ele tem que imprimir todas as linhas
 	return *this;
 }
 

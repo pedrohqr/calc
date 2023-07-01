@@ -13,10 +13,12 @@
   },
   "ExpandedNodes": [
     "",
+    "\\include",
     "\\include\\ast",
     "\\include\\parser",
     "\\include\\symbol",
     "\\include\\util",
+    "\\src",
     "\\src\\ast",
     "\\src\\parser",
     "\\src\\symbol"

@@ -278,17 +278,28 @@ Matrix<T>::operator *(const Matrix& b) const
     if (_n != b._m)
         matrixDimensionMustAgree(_m, _n, b._m, b._n);
 #endif*/ // _DEBUG
-    Matrix<T> tmp{_m, b._n};
 
+    //TODO
+    Matrix<T> tmp{_m, b._n};
+    Matrix<T> me{*this};
+
+    bool firsttime = true;
     for (size_t row = 0; row < _m; ++row)
         for (size_t col = 0; col < b._n; ++col)
             for (size_t k = 0; k < _n; ++k)
             {
-                tmp._data[row] += _data[col] * b(k, col);
-                tmp()
+                if (!firsttime)
+                {
+                    tmp(row, col) = tmp(row, col) + (me(row, k) * b(k, col));
+                    firsttime = true;
+                }
+                else
+                {
+                    tmp(row, col) = me(row, k) * b(k, col);
+                    firsttime = false;
+                }
             }
-                
-
+    
     return tmp;
 }
 
