@@ -62,46 +62,16 @@ calc::ast::Expression::Value::castTo(const Type* required_type) const
 
 calc::ast::Expression::Value
 calc::ast::Expression::Value::operator +(const Value& other) const
-{	//TODO
-	Expression::Value tmp{*this};
-
-	if (isInt(_type) && isInt(other._type))
-	{
-		/*if (std::get<IntMatrix>(_value).rows() == std::get<IntMatrix>(_value).cols() == 1 && std::get<IntMatrix>(other._value).rows() != 1 || std::get<IntMatrix>(other._value).cols() != 1)
-		{	
-			const IntMatrix& matrix = std::get<IntMatrix>(other._value);
-			IntMatrix aux{ matrix.rows(), matrix.cols() };
-			for (size_t i = 0, sr = matrix.rows(); i < sr; ++i)
-				for (size_t j = 0, sc = matrix.cols(); j < sr; ++j)
-					aux(i,j) = std::get<IntMatrix>(_value) + matrix(i, j);
-		}*/
-		tmp._value = std::get<IntMatrix>(_value) + std::get<IntMatrix>(other._value);
-	}
-	else if (isFloat(_type) && isFloat(other._type))
-		tmp._value = std::get<FloatMatrix>(_value) + std::get<FloatMatrix>(other._value);
-	else if (isFloat(_type) && isInt(other._type))
-		tmp._value = std::get<FloatMatrix>(_value) + std::get<FloatMatrix>(other.castTo(_type)._value);
-	else if (isInt(_type) && isFloat(other._type))
-		throw std::bad_cast();
-
-	return tmp;
+{	
+	//TODO
+	return *this;
 }
 
 calc::ast::Expression::Value
 calc::ast::Expression::Value::operator -(const Value& other) const
-{	//TODO
-	Expression::Value tmp{*this};
-
-	if (isInt(_type) && isInt(other._type))
-		tmp._value = std::get<IntMatrix>(_value) - std::get<IntMatrix>(other._value);
-	else if (isFloat(_type) && isFloat(other._type))
-		tmp._value = std::get<FloatMatrix>(_value) - std::get<FloatMatrix>(other._value);
-	else if (isFloat(_type) && isInt(other._type))
-		tmp._value = std::get<FloatMatrix>(_value) - std::get<FloatMatrix>(other.castTo(_type)._value);
-	else if (isInt(_type) && isFloat(other._type))
-		throw std::bad_cast();
-	
-	return tmp;
+{	
+	//TODO
+	return *this;
 }
 
 calc::ast::Expression::Value
@@ -165,67 +135,7 @@ calc::ast::Expression::Value::transpose() const
 calc::ast::Expression::Value
 calc::ast::Expression::Value::horzcat(const Value& other) const
 {
-	if ( isVoid(_type) && isInt(other._type) )
-	{
-		Expression::Value newValue{*this};
-		newValue._value = std::get<IntMatrix>(other._value);
-		newValue._type = other._type;
-
-		return newValue;
-	}
-	else if (isVoid(_type) && isFloat(other._type))
-	{
-		Expression::Value newValue{*this};
-		newValue._value = std::get<FloatMatrix>(other._value);
-		newValue._type = other._type;
-
-		return newValue;
-	}
-	else if ( isInt(_type) && isInt(other._type) )
-	{
-		const IntMatrix& Me = std::get<IntMatrix>(_value);
-		const IntMatrix& Other = std::get<IntMatrix>(other._value);
-		auto r = Me.rows();
-		auto c1 = Me.cols();
-		auto c2 = Other.cols();
-
-		IntMatrix tmp{ r, c1 + c2 };
-
-		for (size_t i = 0; i < r; ++i)
-			for (size_t j = 0, c = c1 + c2; j < c; ++j)
-				if (j < c1)
-					tmp(i, j) = Me(i, j);
-				else
-					tmp(i, j) = Other(i, j - c1);
-
-		Expression::Value newValue{*this};
-		newValue._value = tmp;
-
-		return newValue;
-	}
-	else if (isFloat(_type) && isFloat(other._type))
-	{
-		const FloatMatrix& Me = std::get<FloatMatrix>(_value);
-		const FloatMatrix& Other = std::get<FloatMatrix>(other._value);
-		auto r = Me.rows();
-		auto c1 = Me.cols();
-		auto c2 = Other.cols();
-
-		FloatMatrix tmp{ r, c1 + c2 };
-
-		for (size_t i = 0; i < r; ++i)
-			for (size_t j = 0, c = c1 + c2; j < c; ++j)
-				if (j < c1)
-					tmp(i, j) = Me(i, j);
-				else
-					tmp(i, j) = Other(i, j - c1);
-
-		Expression::Value newValue{*this};
-		newValue._value = tmp;
-
-		return newValue;
-	}
-
+	//TODO
 	return *this;
 }
 
@@ -233,66 +143,6 @@ calc::ast::Expression::Value
 calc::ast::Expression::Value::vertcat(const Value& other) const
 {
 	// TODO
-	if (isVoid(_type) && isInt(other._type))
-	{
-		Expression::Value newValue{*this};
-		newValue._value = std::get<IntMatrix>(other._value);
-		newValue._type = other._type;
-
-		return newValue;
-	}
-	else if (isVoid(_type) && isFloat(other._type))
-	{
-		Expression::Value newValue{*this};
-		newValue._value = std::get<FloatMatrix>(other._value);
-		newValue._type = other._type;
-
-		return newValue;
-	}
-	else if (isInt(_type) && isInt(other._type))
-	{
-		const IntMatrix& Me = std::get<IntMatrix>(_value);
-		const IntMatrix& Other = std::get<IntMatrix>(other._value);
-		auto r1 = Me.rows();
-		auto r2 = Other.rows();
-		auto c = Me.cols();
-
-		IntMatrix tmp{ r1 + r2, c };
-
-		for (size_t i = 0, r = r1+r2; i < r; ++i)
-			for (size_t j = 0; j < c; ++j)
-				if (i < r1)
-					tmp(i, j) = Me(i, j);
-				else
-					tmp(i, j) = Other(i - r1, j);
-
-		Expression::Value newValue{*this};
-		newValue._value = tmp;
-
-		return newValue;
-	}
-	else if (isFloat(_type) && isFloat(other._type))
-	{
-		const FloatMatrix& Me = std::get<FloatMatrix>(_value);
-		const FloatMatrix& Other = std::get<FloatMatrix>(other._value);
-		auto r1 = Me.rows();
-		auto r2 = Other.rows();
-		auto c = Me.cols();
-
-		FloatMatrix tmp{ r1 + r2, c };
-
-		for (size_t i = 0, r = r1 + r2; i < r; ++i)
-			for (size_t j = 0; j < c; ++j)
-				if (i < r1)
-					tmp(i, j) = Me(i, j);
-				else
-					tmp(i, j) = Other(i - r1, j);
-
-		Expression::Value newValue{*this};
-		newValue._value = tmp;
-
-		return newValue;
-	}
 	return *this;
 }
 
@@ -349,6 +199,7 @@ calc::ast::Expression::Value::operator ()(const Value& l1, const Value& l2) cons
 				throw std::length_error("Rows or Cols is invalid");
 
 
+
 		}, _value, l1._value, l2._value);
 	
 	return newValue;
@@ -362,16 +213,27 @@ calc::ast::Expression::Value::rows(const Value& r) const
 	// Ele aceita um matriz de linha 1 somente, de resto é erro
 	
 	Expression::Value newValue;
-	
+	// a(1:2) => Other (0,0) = 1
+	//Other= [1,..]
 	std::visit([&](auto&& Me, auto&& OtherR)
 		{
 			std::decay_t<decltype(Me)> tmp{Me};
-			if (r._type == ":")
-				for (size_t i = 0, sr = Me.rows(); i < sr; ++i)
+			
+			if (OtherR.rows() != 1 && OtherR.cols() < 2)
+				throw std::length_error("Rows must be one and Cols need to be two");
+			else
+			{
+				if (OtherR(0, 0) == ':' && OtherR.cols() == 2)
+					for (size_t i = 0, sr = Me.rows(); i < sr; ++i)
+					{
+						tmp(i, 0) = Me(i, OtherR(0, 1)); //a(:, 4)
+						newValue._value = tmp;
+					}
+				else if (OtherR(0, 0) == ':' && OtherR(0, 2) == '[')
 				{
-					tmp(i, 0) = Me(i, 0);
-					newValue._value = tmp;
+					
 				}
+			}
 
 		}, _value, r._value);
 

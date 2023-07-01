@@ -103,6 +103,25 @@ public:
 #endif // _DEBUG
       return _data[i * _n + j];
   }
+  
+  T& operator()(int i)
+  {
+#ifdef _DEBUG
+      if (i < 0 || i >= _m * _n)
+          throw std::out_of_range("Matrix index out of bounds.");
+#endif // _DEBUG
+
+      return _data[i];
+  }
+
+  T operator()(int i) const
+  {
+#ifdef _DEBUG
+      if (i < 0 || i >= _m * _n)
+          throw std::out_of_range("Matrix index out of bounds.");
+#endif // _DEBUG
+      return _data[i];
+  }
 
   Matrix& operator =(const Matrix&);
   Matrix& operator =(Matrix&&) noexcept;
