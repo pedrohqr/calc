@@ -55,6 +55,7 @@ add_executable(calc
   src/Main.cpp
   src/ProblemReporter.cpp
   src/Writer.cpp
+  src/util/Exception.cpp
   src/ast/Assignment.cpp
   src/ast/BinaryExpression.cpp
   src/ast/CastExpression.cpp

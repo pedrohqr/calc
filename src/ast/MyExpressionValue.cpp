@@ -100,13 +100,13 @@ calc::ast::Expression::Value::operator *(const Value& other) const
 	{
 		if (std::get<FloatMatrix>(_value).cols() != std::get<FloatMatrix>(other._value).rows())
 			throw std::length_error("Cols and Rows differents");
-		tmp._value = std::get<FloatMatrix>(_value) - std::get<FloatMatrix>(other._value);
+		tmp._value = std::get<FloatMatrix>(_value) * std::get<FloatMatrix>(other._value);
 	}
 	else if (isFloat(_type) && isInt(other._type))
 	{
 		if (std::get<FloatMatrix>(_value).cols() != std::get<IntMatrix>(other._value).rows())
 			throw std::length_error("Cols and Rows differents");
-		tmp._value = std::get<FloatMatrix>(_value) - std::get<FloatMatrix>(other.castTo(_type)._value);
+		tmp._value = std::get<FloatMatrix>(_value) * std::get<FloatMatrix>(other.castTo(_type)._value);
 	}
 	else if (isInt(_type) && isFloat(other._type))
 		throw std::bad_cast();
@@ -121,12 +121,10 @@ calc::ast::Expression::Value::operator /(const Value& other) const
 	newValue._type = Type::Float();	
 
 	std::visit([&](auto&& Me, auto&& Other) {
-
+		#ifdef _DEBUG
 			if (Other.rows() != 1 || Other.cols() != 1)
-			{
-				std::cerr << "Invalid value to divide.\n";
-				return *this;
-			}
+				util::error<std::logic_error>("Invalid value to divide");
+		#endif // _DEBUG
 
 			newValue._value = FloatMatrix{ Me.rows(), Me.cols() };
 
@@ -134,7 +132,7 @@ calc::ast::Expression::Value::operator /(const Value& other) const
 
 			for (size_t i = 0; i < Me.rows(); ++i)
 				for (size_t j = 0; j < Me.cols(); ++j)
-					std::get<FloatMatrix>(newValue._value)(i, j) = (float) Me(i, j) / sValue;
+					std::get<FloatMatrix>(newValue._value)(i, j) = static_cast<float>(Me(i, j)) / sValue ;
 
 		}, _value, other._value);
 

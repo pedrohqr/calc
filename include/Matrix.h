@@ -24,6 +24,14 @@ enum class MatrixIndexType
 };
 
 inline auto
+matrixIndexOutOfRange(int i, size_t n)
+{
+    util::error<std::logic_error>("Matrix index out of range: index %d not in [0,%llu)",
+        i,
+        n);
+}
+
+inline auto
 matrixIndexOutOfRange(MatrixIndexType it, int i, size_t n)
 {
   util::error<std::logic_error>("Matrix index out of range: %s %d not in [0,%llu)",
@@ -85,62 +93,36 @@ public:
     return _n;
   }
 
-  T& operator()(int i, int j)
+  auto& operator ()(int i, int j)
   {
 #ifdef _DEBUG
-      if (i < 0 || i >= _m || j < 0 || j >= _n) 
-          throw std::out_of_range("Matrix index out of bounds.");
-#endif // _DEBUG
-
-      return _data[i * _n + j];
-  }
-
-  T operator()(int i, int j) const
-  {
-#ifdef _DEBUG
-      if (i < 0 || i >= _m || j < 0 || j >= _n) 
-          throw std::out_of_range("Matrix index out of bounds.");
+      if (i < 0 || i >= _m)
+          matrixIndexOutOfRange(MatrixIndexType::Row, i, _m);
+      if (j < 0 || j >= _n)
+          matrixIndexOutOfRange(MatrixIndexType::Col, j, _n);
 #endif // _DEBUG
       return _data[i * _n + j];
   }
-  
-  T& operator()(int i)
-  {
-#ifdef _DEBUG
-      if (i < 0 || i >= _m * _n)
-          throw std::out_of_range("Matrix index out of bounds.");
-#endif // _DEBUG
 
-      return _data[i];
+  auto operator ()(int i, int j) const
+  {
+      return const_cast<Matrix*>(this)->operator ()(i, j);
   }
 
-  T operator()(int i) const
+  auto& operator ()(int i)
   {
 #ifdef _DEBUG
       if (i < 0 || i >= _m * _n)
-          throw std::out_of_range("Matrix index out of bounds.");
+          matrixIndexOutOfRange(i, _m);
 #endif // _DEBUG
       return _data[i];
   }
 
-  T& operator()(int i)
+  auto operator ()(int i) const
   {
-#ifdef _DEBUG
-      if (i < 0 || i >= _m * _n)
-          throw std::out_of_range("Matrix index out of bounds.");
-#endif // _DEBUG
-
-      return _data[i];
+      return const_cast<Matrix*>(this)->operator ()(i);
   }
 
-  T operator()(int i) const
-  {
-#ifdef _DEBUG
-      if (i < 0 || i >= _m * _n)
-          throw std::out_of_range("Matrix index out of bounds.");
-#endif // _DEBUG
-      return _data[i];
-  }
 
   Matrix& operator =(const Matrix&);
   Matrix& operator =(Matrix&&) noexcept;
@@ -155,6 +137,10 @@ public:
   template<typename U>
   Matrix<float> operator+(const Matrix<U>& other) const 
   {
+#ifdef _DEBUG
+      if (_m != other.rows() || _n != other.cols())
+          matrixDimensionMustAgree(_m, _n, other.rows(), other.cols());
+#endif // _DEBUG
       Matrix<float> result(_m, _n);
       for (size_t i = 0; i < _m * _n; ++i) {
           result(i) = static_cast<float>(_data[i]) + static_cast<float>(other(i));
@@ -292,10 +278,10 @@ template <typename T>
 Matrix<T>
 Matrix<T>::operator +(const Matrix& b) const
 {
-/*#ifdef _DEBUG
+#ifdef _DEBUG
     if (_m != b._m || _n != b._n)
         matrixDimensionMustAgree(_m, _n, b._m, b._n);
-#endif // _DEBUG*/
+#endif // _DEBUG
 
   Matrix c{_m, _n};
 
@@ -308,10 +294,10 @@ template<typename T>
 Matrix<T>
 Matrix<T>::operator -(const Matrix& b) const
 {
-/*#ifdef _DEBUG
+#ifdef _DEBUG
     if (_m != b._m || _n != b._n)
         matrixDimensionMustAgree(_m, _n, b._m, b._n);
-#endif */// _DEBUG
+#endif // _DEBUG
 
     Matrix c{ _m, _n };
 
@@ -324,10 +310,10 @@ template<typename T>
 Matrix<T>
 Matrix<T>::operator *(const Matrix& b) const
 {
-/*#ifdef _DEBUG
+#ifdef _DEBUG
     if (_n != b._m)
         matrixDimensionMustAgree(_m, _n, b._m, b._n);
-#endif*/ // _DEBUG
+#endif // _DEBUG
 
     //TODO
     Matrix<T> tmp{_m, b._n};
