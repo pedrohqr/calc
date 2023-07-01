@@ -380,7 +380,6 @@ calc::ast::Expression::Value::cols(const Value& c) const
 		}, _value, c._value);
 
 	return newValue;
-	return *this;
 }
 
 calc::ast::Expression::Value
