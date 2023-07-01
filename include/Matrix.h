@@ -83,16 +83,19 @@ public:
     delete []_data;
   }
 
+  inline
   auto rows() const
   {
     return _m;
   }
 
+  inline
   auto cols() const
   {
     return _n;
   }
 
+  inline
   auto& operator ()(int i, int j)
   {
 #ifdef _DEBUG
@@ -104,11 +107,13 @@ public:
       return _data[i * _n + j];
   }
 
+  inline
   auto operator ()(int i, int j) const
   {
       return const_cast<Matrix*>(this)->operator ()(i, j);
   }
 
+  inline
   auto& operator ()(int i)
   {
 #ifdef _DEBUG
@@ -118,6 +123,7 @@ public:
       return _data[i];
   }
 
+  inline
   auto operator ()(int i) const
   {
       return const_cast<Matrix*>(this)->operator ()(i);
@@ -133,22 +139,10 @@ public:
   Matrix& operator *=(const T&);
 
   Matrix operator +(const Matrix&) const;
-
-  template<typename U>
-  Matrix<float> operator+(const Matrix<U>& other) const 
-  {
-#ifdef _DEBUG
-      if (_m != other.rows() || _n != other.cols())
-          matrixDimensionMustAgree(_m, _n, other.rows(), other.cols());
-#endif // _DEBUG
-      Matrix<float> result(_m, _n);
-      for (size_t i = 0; i < _m * _n; ++i) {
-          result(i) = static_cast<float>(_data[i]) + static_cast<float>(other(i));
-      }
-      return result;
-  }
-
+  template<typename U> Matrix<float> operator +(const Matrix<U>& other) const;
   Matrix operator -(const Matrix&) const;
+  template<typename U> Matrix<float> operator -(const Matrix<U>& other) const;
+  Matrix operator -() const;
   Matrix operator *(const Matrix&) const;
   Matrix operator *(const T&) const;
   Matrix& operator *();
@@ -166,7 +160,7 @@ public:
 
   T get_value_type()
   {
-      return *static_cast<T*>(this);
+      return T;
   }
 
 private:
@@ -291,6 +285,24 @@ Matrix<T>::operator +(const Matrix& b) const
 }
 
 template<typename T>
+template<typename U>
+Matrix<float> 
+Matrix<T>::operator +(const Matrix<U>& other) const
+{
+#ifdef _DEBUG
+    if (_m != other.rows() || _n != other.cols())
+        matrixDimensionMustAgree(_m, _n, other.rows(), other.cols());
+#endif // _DEBUG
+
+    Matrix<float> result(_m, _n);
+
+    for (size_t i = 0; i < _m * _n; ++i)
+        result(i) = static_cast<float>(_data[i]) + static_cast<float>(other(i));
+
+    return result;
+}
+
+template <typename T>
 Matrix<T>
 Matrix<T>::operator -(const Matrix& b) const
 {
@@ -307,49 +319,72 @@ Matrix<T>::operator -(const Matrix& b) const
 }
 
 template<typename T>
-Matrix<T>
-Matrix<T>::operator *(const Matrix& b) const
+template<typename U>
+Matrix<float>
+Matrix<T>::operator -(const Matrix<U>& other) const
 {
 #ifdef _DEBUG
-    if (_n != b._m)
-        matrixDimensionMustAgree(_m, _n, b._m, b._n);
+    if (_m != other.rows() || _n != other.cols())
+        matrixDimensionMustAgree(_m, _n, other.rows(), other.cols());
 #endif // _DEBUG
 
-    //TODO
-    Matrix<T> tmp{_m, b._n};
-    Matrix<T> me{*this};
+    Matrix<float> result(_m, _n);
 
-    bool firsttime = true;
-    for (size_t row = 0; row < _m; ++row)
-        for (size_t col = 0; col < b._n; ++col)
-            for (size_t k = 0; k < _n; ++k)
-            {
-                if (!firsttime)
-                {
-                    tmp(row, col) = tmp(row, col) + (me(row, k) * b(k, col));
-                    firsttime = true;
-                }
-                else
-                {
-                    tmp(row, col) = me(row, k) * b(k, col);
-                    firsttime = false;
-                }
+    for (size_t i = 0; i < _m * _n; ++i)
+        result(i) = static_cast<float>(_data[i]) - static_cast<float>(other(i));
+
+    return result;
+}
+
+template<typename T>
+Matrix<T> 
+Matrix<T>::operator -() const
+{
+    Matrix<T> result{_m, _n};
+
+    for (size_t i = 0; i < _m; ++i)
+        for (size_t j = 0; j < _n; ++j)
+            result(i, j) = -(*this)(i, j);
+
+    return result;
+}
+
+template<typename T>
+Matrix<T>
+Matrix<T>::operator *(const Matrix& other) const
+{
+#ifdef _DEBUG
+    if (_n != other._m)
+        matrixDimensionMustAgree(_m, _n, other._m, other._n);
+#endif // _DEBUG
+
+    Matrix<T> result{ _m, other._n };
+
+    for (size_t i = 0; i < _m; ++i) {
+        for (size_t j = 0; j < other._n; ++j) {
+            T sum = 0;
+            for (size_t k = 0; k < _n; ++k) {
+                sum += (*this)(i, k) * other(k, j);
             }
-    
-    return tmp;
+            result(i, j) = sum;
+        }
+    }
+
+    return result;
 }
 
 template<typename T>
 Matrix<T>
 Matrix<T>::operator *(const T& value) const
 {
-    Matrix C{ _m, _n };
+    Matrix result{ _m, _n };
 
     for (size_t i = 0, s = _m * _n; i < s; ++i)
-        C[i] = _data[i] * value;
+        result[i] = _data[i] * value;
 
-    return C;
+    return result;
 }
+
 template<typename T>
 Matrix<T>&
 Matrix<T>::operator *()
@@ -386,13 +421,13 @@ template<typename T>
 Matrix<T>
 Matrix<T>::transpose() const
 {
-    Matrix C{ _n, _m };
+    Matrix result{ _n, _m };
 
-    for (size_t lin = 0; lin < _m; ++lin)
-        for (size_t col = 0; col < _n; ++col)
-            C[col][lin] = _data[lin][col];
+    for (size_t i = 0; i < _m; ++i)
+        for (size_t j = 0; j < _n; ++j)
+            result(j, i) = (*this)(i, j);
 
-    return C;
+    return result;
 }
 
 template <typename T>

@@ -80,8 +80,18 @@ calc::ast::Expression::Value::operator +(const Value& other) const
 calc::ast::Expression::Value
 calc::ast::Expression::Value::operator -(const Value& other) const
 {	
-	//TODO
-	return *this;
+	Expression::Value newValue{*this};
+
+	std::visit([&](auto&& Me, auto&& Other) {
+
+		newValue._value = Me - Other;
+
+		if (_type != other._type)
+			newValue._type = Type::Float();
+
+		}, _value, other._value);
+
+	return newValue;
 }
 
 calc::ast::Expression::Value
@@ -146,10 +156,7 @@ calc::ast::Expression::Value::operator -() const
 
 	std::visit([&](auto&& matrix) {
 
-			for (size_t i = 0, sr = matrix.rows(); i < sr; ++i)
-				for (size_t j = 0, sc = matrix.cols(); j < sc; ++j)
-					matrix(i, j) = -matrix(i, j);
-			newValue._value = matrix;
+			newValue._value = -matrix;
 
 		}, newValue._value);
 
@@ -165,8 +172,8 @@ calc::ast::Expression::Value::size() const
 	newValue._type = Type::Int();
 		
 	std::visit([&](auto&& matrix) {
-			tmp(0, 0) = (int) matrix.rows();
-			tmp(0, 1) = (int) matrix.cols();
+			tmp(0, 0) = static_cast<int>( matrix.rows() );
+			tmp(0, 1) = static_cast<int>( matrix.cols() );
 
 			newValue._value = tmp;
 		}, newValue._value);
@@ -179,15 +186,9 @@ calc::ast::Expression::Value::transpose() const
 {
 	Expression::Value newValue{*this};
 
-	std::visit([&](auto&& Me) {
+	std::visit([&](auto&& Me) {			
 
-			std::decay_t<decltype(Me)> tmp{ Me.cols(), Me.rows() };
-
-			for (size_t i = 0; i < Me.rows(); ++i)
-				for (size_t j = 0; j < Me.cols(); ++j)
-					tmp(j, i) = Me(i, j);
-
-			newValue._value = tmp;
+			newValue._value = Me.transpose();
 
 		}, _value);
 
@@ -298,7 +299,7 @@ calc::ast::Expression::Value::operator ()(const Value& l1, const Value& l2) cons
 	// Se ele tiver matrix vazia, devolve essa matriz vazia
 	// a(1:2, [3,0,2]) ela tem q se restringir da linha 1 at� 2 e devolver as colunas 3, 0 e 2 e devolve uma submatriz de qualquer tipo
 	// Para [3, 0 ,2 ] ele s� pode ser vetor, ou seja, n�o pode ter mais do que 1 linha, se n�o � erro
-	Expression::Value newValue;
+	/*Expression::Value newValue;
 	
 	std::visit([&](auto&& Me, auto&& Otherl, auto&& Otherc)
 		{
@@ -314,7 +315,8 @@ calc::ast::Expression::Value::operator ()(const Value& l1, const Value& l2) cons
 
 		}, _value, l1._value, l2._value);
 	
-	return newValue;
+	return newValue;*/
+	return *this;
 }
 
 calc::ast::Expression::Value
@@ -408,9 +410,36 @@ calc::ast::Expression::Value::write(Writer& writer) const
 }
 
 calc::ast::Expression::Value
-calc::ast::Expression::Value::colon(const Value&, const Value&, const Value&)
+calc::ast::Expression::Value::colon(const Value& from, const Value& to, const Value& step)
 {
-	// TODO
-	Value a{};
-	return a;
+	Expression::Value newValue{};	
+	
+	std::visit([&](auto&& From, auto&& To, auto&& Step) {
+
+		#ifdef _DEBUG
+			if (From.cols() != 1 || From.rows() != 1)
+				util::error<std::logic_error>("First argument must be a single number");
+			else if (Step.cols() != 1 || Step.rows() != 1)
+				util::error<std::logic_error>("Step argument must be a single number");
+			else if (To.cols() != 1 || To.rows() != 1)
+				util::error<std::logic_error>("Second argument must be a single number");
+		#endif // _DEBUG
+
+			std::decay_t<decltype(From(0))> start{From(0)};
+			std::decay_t<decltype(Step(0))> incremment{Step(0)};
+			std::decay_t<decltype(To(0))> end{To(0)};
+
+			std::decay_t<decltype(Step)> tmp{ 1, static_cast<size_t>((end-start)/incremment)+1 };
+
+			decltype(incremment) val = start;
+
+			for (size_t i = 0; val <= end; val = val + incremment)			
+				tmp(0, i++) = val;
+
+			newValue._value = tmp;
+			newValue._type = step._type;
+
+		}, from._value, to._value, step._value);
+
+	return newValue;
 }
