@@ -104,6 +104,25 @@ public:
       return _data[i * _n + j];
   }
 
+  T& operator()(int i)
+  {
+#ifdef _DEBUG
+      if (i < 0 || i >= _m * _n)
+          throw std::out_of_range("Matrix index out of bounds.");
+#endif // _DEBUG
+
+      return _data[i];
+  }
+
+  T operator()(int i) const
+  {
+#ifdef _DEBUG
+      if (i < 0 || i >= _m * _n)
+          throw std::out_of_range("Matrix index out of bounds.");
+#endif // _DEBUG
+      return _data[i];
+  }
+
   Matrix& operator =(const Matrix&);
   Matrix& operator =(Matrix&&) noexcept;
 
@@ -113,9 +132,21 @@ public:
   Matrix& operator *=(const T&);
 
   Matrix operator +(const Matrix&) const;
+
+  template<typename U>
+  Matrix<float> operator+(const Matrix<U>& other) const 
+  {
+      Matrix<float> result(_m, _n);
+      for (size_t i = 0; i < _m * _n; ++i) {
+          result(i) = static_cast<float>(_data[i]) + static_cast<float>(other(i));
+      }
+      return result;
+  }
+
   Matrix operator -(const Matrix&) const;
   Matrix operator *(const Matrix&) const;
   Matrix operator *(const T&) const;
+  Matrix& operator *();
   Matrix* operator &();
   Vector<T> operator *(const Vector<T>&) const;
 
@@ -299,6 +330,13 @@ Matrix<T>::operator *(const T& value) const
 
     return C;
 }
+template<typename T>
+Matrix<T>&
+Matrix<T>::operator *()
+{
+    return *this;
+}
+
 template<typename T>
 Matrix<T>*
 Matrix<T>::operator &()

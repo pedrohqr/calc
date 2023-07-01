@@ -2,9 +2,11 @@
 #define __ExpressionValue_h
 
 #include "ast/Expression.h"
+#include "util/Exception.h"
 #include "Matrix.h"
 #include "Writer.h"
 #include <variant>
+#include <type_traits>
 
 using namespace math;
 
@@ -18,7 +20,6 @@ namespace calc
 
     namespace ast
     { // begin namespace ast
-
 
     /////////////////////////////////////////////////////////////////////
     //
@@ -38,7 +39,7 @@ namespace calc
 
             Value castTo(const Type*) const;
 
-            Value operator +(const Value&) const;
+            Value operator +(const Value&) const;       
             Value operator -(const Value&) const;
             Value operator *(const Value&) const;
             Value operator /(const Value&) const;
@@ -71,7 +72,7 @@ namespace calc
             Type* _type;
             std::variant<FloatMatrix, IntMatrix> _value;
 
-            /*template <typename T> Value(const Matrix<T>&);
+            /*template <typename T> Value(const Matrix<T>&); //construtor da classe passando a matrix por ref
 
             Size valueSize() const;
             template <typename T> Matrix<T> castTo() const;
