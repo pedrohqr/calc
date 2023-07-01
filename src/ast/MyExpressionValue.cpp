@@ -267,26 +267,32 @@ calc::ast::Expression::Value::operator ()(const Value& other) const
 
 	std::visit([&](auto&& Me, auto&& Other)
 		{
-			if (Other.rows() != 1 && Other.cols() != 1 || Other(0, 0) >= Me.rows() * Me.cols())
-				throw std::out_of_range("Invalid range");
-			else if (!isInt(other._type))
-				throw std::invalid_argument("Type is not int");
-			else
-			{
-				std::decay_t<decltype(Me)> tmp{1, 1};
+			#ifdef _DEBUG
+				if (Other.rows() != 1 && Other.cols() != 1 || Other(0, 0) >= Me.rows() * Me.cols())
+					util::error<std::out_of_range>("Invalid Rows or Cols");
+			#endif
 
-				for (size_t i = 0, sr = Me.rows();i < sr; ++i)
-					for (size_t j = 0, sc = Me.cols(); j < sc; ++j)
-					{
-						if ((i * sc + j) == Other(0, 0))
+			#ifdef _DEBUG
+				else if (!isInt(other._type))
+					util::error<std::invalid_argument>("Tyep is not int");
+			#endif
+			
+				else
+				{
+					std::decay_t<decltype(Me)> tmp{1, 1};
+
+					for (size_t i = 0, sr = Me.rows();i < sr; ++i)
+						for (size_t j = 0, sc = Me.cols(); j < sc; ++j)
 						{
-							tmp(0, 0) = Me(i, j);
-							newValue._value = tmp;
-							break;
+							if ((i * sc + j) == Other(0, 0))
+							{
+								tmp(0, 0) = Me(i, j);
+								newValue._value = tmp;
+								break;
+							}
 						}
-					}
-			}
-		},_value, other._value);
+				}
+			},_value, other._value);
 	
 	return newValue;
 }
@@ -303,14 +309,21 @@ calc::ast::Expression::Value::operator ()(const Value& l1, const Value& l2) cons
 	
 	std::visit([&](auto&& Me, auto&& Otherl, auto&& Otherc)
 		{
+			#ifdef _DEBUG	
+			if (Me.rows() < Otherl(0, 0) || Me.cols() < Otherc(0, 0))
+					util::error<std::length_error>("Rows or Cols is invalid");
+			#endif
+			
 			if (isVoid(l1._type) || isVoid(l2._type))
 			{
 				std::decay_t<decltype(Me)> tmp{};
 				newValue._value = tmp;
 			}
-			else if (Me.rows() > Otherl.rows() || Me.cols() > Otherl.cols() || Me.rows() > Otherc.rows() || Me.cols() > Otherc.cols())
-				throw std::length_error("Rows or Cols is invalid");
 
+			std::decay_t<decltype(Me)> tmp{1, 1};
+
+			tmp(0,0) = Me(Otherl(0, 0), Otherc(0, 0));
+			newValue._value = tmp;
 
 
 		}, _value, l1._value, l2._value);
@@ -322,32 +335,23 @@ calc::ast::Expression::Value::operator ()(const Value& l1, const Value& l2) cons
 calc::ast::Expression::Value
 calc::ast::Expression::Value::rows(const Value& r) const
 {
-	// TODO
-	// Operador :, ou seja, ele tem que imprimir todas as linhas
-	// Ele aceita um matriz de linha 1 somente, de resto � erro
-	
 	Expression::Value newValue;
-	// a(1:2) => Other (0,0) = 1
-	//Other= [1,..]
 	std::visit([&](auto&& Me, auto&& OtherR)
-		{
-			std::decay_t<decltype(Me)> tmp{Me};
+		{			
+			#ifdef _DEBUG
+				if (OtherR.rows() != 1 && OtherR.cols() != 1)
+					util::error<std::length_error>("Rows and Cols must be one");
+			#endif
 			
-			if (OtherR.rows() != 1 && OtherR.cols() < 2)
-				throw std::length_error("Rows must be one and Cols need to be two");
-			else
-			{
-				if (OtherR(0, 0) == ':' && OtherR.cols() == 2)
-					for (size_t i = 0, sr = Me.rows(); i < sr; ++i)
+				else
+				{
+					std::decay_t<decltype(Me)> tmp{1, Me.cols()};
+					for(size_t j = 0, sc = Me.cols(); j < sc; ++j)
 					{
-						tmp(i, 0) = Me(i, OtherR(0, 1)); //a(:, 4)
+						tmp(0, j) = Me(OtherR(0,0), j);
 						newValue._value = tmp;
 					}
-				else if (OtherR(0, 0) == ':' && OtherR(0, 2) == '[')
-				{
-					
 				}
-			}
 
 		}, _value, r._value);
 
@@ -357,9 +361,27 @@ calc::ast::Expression::Value::rows(const Value& r) const
 calc::ast::Expression::Value
 calc::ast::Expression::Value::cols(const Value& c) const
 {
-	// TODO
-	// Operador :, ou seja, ele tem que imprimir todas as linhas
-	return *this;
+	Expression::Value newValue;
+	std::visit([&](auto&& Me, auto&& OtherR)
+		{
+#ifdef _DEBUG
+			if (OtherR.rows() != 1 && OtherR.cols() != 1)
+				util::error<std::length_error>("Rows and Cols must be one");
+#endif
+
+			else
+			{
+				std::decay_t<decltype(Me)> tmp{Me.rows(), 1};
+				for (size_t i = 0, sr = Me.rows(); i < sr; ++i)
+				{
+					tmp(i, 0) = Me(i, OtherR(0, 0));
+					newValue._value = tmp;
+				}
+			}
+
+		}, _value, c._value);
+
+	return newValue;
 }
 
 calc::ast::Expression::Value
