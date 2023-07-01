@@ -103,6 +103,25 @@ public:
 #endif // _DEBUG
       return _data[i * _n + j];
   }
+  
+  T& operator()(int i)
+  {
+#ifdef _DEBUG
+      if (i < 0 || i >= _m * _n)
+          throw std::out_of_range("Matrix index out of bounds.");
+#endif // _DEBUG
+
+      return _data[i];
+  }
+
+  T operator()(int i) const
+  {
+#ifdef _DEBUG
+      if (i < 0 || i >= _m * _n)
+          throw std::out_of_range("Matrix index out of bounds.");
+#endif // _DEBUG
+      return _data[i];
+  }
 
   T& operator()(int i)
   {
@@ -289,10 +308,10 @@ template<typename T>
 Matrix<T>
 Matrix<T>::operator -(const Matrix& b) const
 {
-#ifdef _DEBUG
+/*#ifdef _DEBUG
     if (_m != b._m || _n != b._n)
         matrixDimensionMustAgree(_m, _n, b._m, b._n);
-#endif // _DEBUG
+#endif */// _DEBUG
 
     Matrix c{ _m, _n };
 
@@ -305,17 +324,32 @@ template<typename T>
 Matrix<T>
 Matrix<T>::operator *(const Matrix& b) const
 {
-#ifdef _DEBUG
+/*#ifdef _DEBUG
     if (_n != b._m)
         matrixDimensionMustAgree(_m, _n, b._m, b._n);
-#endif // _DEBUG
-    Matrix<T> tmp{_m, b._n};
+#endif*/ // _DEBUG
 
+    //TODO
+    Matrix<T> tmp{_m, b._n};
+    Matrix<T> me{*this};
+
+    bool firsttime = true;
     for (size_t row = 0; row < _m; ++row)
         for (size_t col = 0; col < b._n; ++col)
             for (size_t k = 0; k < _n; ++k)
-                tmp[row][col] += _data[row][k] * b[k][col];
-
+            {
+                if (!firsttime)
+                {
+                    tmp(row, col) = tmp(row, col) + (me(row, k) * b(k, col));
+                    firsttime = true;
+                }
+                else
+                {
+                    tmp(row, col) = me(row, k) * b(k, col);
+                    firsttime = false;
+                }
+            }
+    
     return tmp;
 }
 
