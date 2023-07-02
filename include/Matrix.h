@@ -68,67 +68,20 @@ public:
 
   Matrix() = default;
 
-  Matrix(size_t m, size_t n):
-    _m{m},
-    _n{n}
-  {
-    _data = new T[m * n];
-  }
+  Matrix(size_t m, size_t n);
 
   Matrix(const Matrix&);
   Matrix(Matrix&&) noexcept;
 
-  ~Matrix()
-  {
-    delete []_data;
-  }
+  ~Matrix();
 
-  inline
-  auto rows() const
-  {
-    return _m;
-  }
+  inline auto rows() const;
+  inline auto cols() const;
 
-  inline
-  auto cols() const
-  {
-    return _n;
-  }
-
-  inline
-  auto& operator ()(int i, int j)
-  {
-#ifdef _DEBUG
-      if (i < 0 || i >= _m)
-          matrixIndexOutOfRange(MatrixIndexType::Row, i, _m);
-      if (j < 0 || j >= _n)
-          matrixIndexOutOfRange(MatrixIndexType::Col, j, _n);
-#endif // _DEBUG
-      return _data[i * _n + j];
-  }
-
-  inline
-  auto operator ()(int i, int j) const
-  {
-      return const_cast<Matrix*>(this)->operator ()(i, j);
-  }
-
-  inline
-  auto& operator ()(int i)
-  {
-#ifdef _DEBUG
-      if (i < 0 || i >= _m * _n)
-          matrixIndexOutOfRange(i, _m);
-#endif // _DEBUG
-      return _data[i];
-  }
-
-  inline
-  auto operator ()(int i) const
-  {
-      return const_cast<Matrix*>(this)->operator ()(i);
-  }
-
+  inline auto& operator ()(int i, int j);
+  inline auto operator ()(int i, int j) const;
+  inline auto& operator ()(int i);
+  inline auto operator ()(int i) const;
 
   Matrix& operator =(const Matrix&);
   Matrix& operator =(Matrix&&) noexcept;
@@ -138,30 +91,19 @@ public:
   Matrix& operator *=(const Matrix&);
   Matrix& operator *=(const T&);
 
-  Matrix operator +(const Matrix&) const;
   template<typename U> Matrix<float> operator +(const Matrix<U>& other) const;
-  Matrix operator -(const Matrix&) const;
   template<typename U> Matrix<float> operator -(const Matrix<U>& other) const;
+
+  Matrix operator +(const Matrix&) const;
+  Matrix operator -(const Matrix&) const;
   Matrix operator -() const;
   Matrix operator *(const Matrix&) const;
   Matrix operator *(const T&) const;
-  Matrix& operator *();
-  Matrix* operator &();
   Vector<T> operator *(const Vector<T>&) const;
 
   Matrix transpose() const;
-
+  Matrix linearize() const;
   void print(calc::Writer&) const;
-
-  Matrix<T> get_type()
-  {
-      return this;
-  }
-
-  T get_value_type()
-  {
-      return T;
-  }
 
 private:
   size_t _m{};
@@ -172,6 +114,14 @@ private:
 
 using IntMatrix = Matrix<int>;
 using FloatMatrix = Matrix<float>;
+
+template<typename T>
+Matrix<T>::Matrix(size_t m, size_t n) :
+    _m{ m },
+    _n{ n }
+{
+    _data = new T[m * n];
+}
 
 template <typename T>
 Matrix<T>::Matrix(const Matrix& other):
@@ -189,6 +139,64 @@ Matrix<T>::Matrix(Matrix&& other) noexcept
   _data = other._data;
   other._m = other._n = 0;
   other._data = nullptr;
+}
+
+template<typename T>
+Matrix<T>::~Matrix()
+{
+    delete[]_data;
+}
+
+template<typename T>
+inline
+auto Matrix<T>::rows() const
+{
+    return _m;
+};
+
+template<typename T>
+inline
+auto Matrix<T>::cols() const
+{
+    return _n;
+};
+
+template<typename T>
+inline
+auto& Matrix<T>::operator ()(int i, int j)
+{
+#ifdef _DEBUG
+    if (i < 0 || i >= _m)
+        matrixIndexOutOfRange(MatrixIndexType::Row, i, _m);
+    if (j < 0 || j >= _n)
+        matrixIndexOutOfRange(MatrixIndexType::Col, j, _n);
+#endif // _DEBUG
+    return _data[i * _n + j];
+}
+
+template<typename T>
+inline
+auto Matrix<T>::operator ()(int i, int j) const
+{
+    return const_cast<Matrix*>(this)->operator ()(i, j);
+}
+
+template<typename T>
+inline
+auto& Matrix<T>::operator ()(int i)
+{
+#ifdef _DEBUG
+    if (i < 0 || i >= _m * _n)
+        matrixIndexOutOfRange(i, _m);
+#endif // _DEBUG
+    return _data[i];
+}
+
+template<typename T>
+inline
+auto Matrix<T>::operator ()(int i) const
+{
+    return const_cast<Matrix*>(this)->operator ()(i);
 }
 
 template <typename T>
@@ -386,20 +394,6 @@ Matrix<T>::operator *(const T& value) const
 }
 
 template<typename T>
-Matrix<T>&
-Matrix<T>::operator *()
-{
-    return *this;
-}
-
-template<typename T>
-Matrix<T>*
-Matrix<T>::operator &()
-{
-    return this;
-}
-
-template<typename T>
 Vector<T>
 Matrix<T>::operator *(const Vector<T>& vec) const
 {
@@ -426,6 +420,18 @@ Matrix<T>::transpose() const
     for (size_t i = 0; i < _m; ++i)
         for (size_t j = 0; j < _n; ++j)
             result(j, i) = (*this)(i, j);
+
+    return result;
+}
+
+template<typename T>
+Matrix<T> 
+Matrix<T>::linearize() const
+{
+    Matrix<T> result{1, _m * _n};
+
+    for (size_t i = 0, s = _m * _n; i < s; ++i)
+        result(i) = _data[i];
 
     return result;
 }

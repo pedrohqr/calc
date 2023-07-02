@@ -72,22 +72,6 @@ namespace calc
             Type* _type;
             std::variant<FloatMatrix, IntMatrix> _value;
 
-            /*template <typename T> Value(const Matrix<T>&); //construtor da classe passando a matrix por ref
-
-            Size valueSize() const;
-            template <typename T> Matrix<T> castTo() const;
-            Value block(const IntMatrix&, const IntMatrix&) const;
-            template <template <typename T> typename Op> Value bop(const Value&) const;
-
-            template <typename T> Matrix<T>& get();
-            void setBlock(const IntMatrix&, const IntMatrix&, const Value&);
-
-            template <typename T>
-            Matrix<T> get() const
-            {
-                return const_cast<Value*>(this)->get<T>();
-            }*/
-
         }; // Expression::Value
 
     } // end namespace ast

@@ -222,7 +222,7 @@ calc::ast::Expression::Value::horzcat(const Value& other) const
 		return newValue;
 	}
 	else
-		throw std::bad_typeid();
+		util::error("Matrix value must be same type");
 
 	return *this;
 }
@@ -238,61 +238,47 @@ calc::ast::Expression::Value::vertcat(const Value& other) const
 
 		std::visit([&](auto&& Me, auto&& Other) {
 
-				std::decay_t<decltype(Me)> tmp{ Me.rows() + Other.rows(), Me.cols() };
+			std::decay_t<decltype(Me)> tmp{ Me.rows() + Other.rows(), Me.cols() };
 
-				for (size_t i = 0, r = Me.rows() + Other.rows(); i < r; ++i)
-					for (size_t j = 0; j < Me.cols(); ++j)
-						if (i < Me.rows())
-							tmp(i, j) = Me(i, j);
-						else
-							tmp(i, j) = Other(i - Me.rows(), j);
+			for (size_t i = 0, r = Me.rows() + Other.rows(); i < r; ++i)
+				for (size_t j = 0; j < Me.cols(); ++j)
+					if (i < Me.rows())
+						tmp(i, j) = Me(i, j);
+					else
+						tmp(i, j) = Other(i - Me.rows(), j);
 
-				newValue._value = tmp;
+			newValue._value = tmp;
 
 			}, _value, other._value);
 
 		return newValue;
 	}
 	else
-		throw std::bad_typeid();
-
+		util::error("Matrix value must be same type");
+	
 	return *this;
 }
 
 calc::ast::Expression::Value
 calc::ast::Expression::Value::operator ()(const Value& other) const
-{
-	//TODO -> tem que ainda aceitar um vetor e retornar as posi��es colocadas no vetor e tamb�m tem que devolver uma sub-matriz a partir de um elemento x at� y, ou seja 2:5(segunda linha at� a 5 coluna)
+{	
 	Expression::Value newValue{*this};
 
-	std::visit([&](auto&& Me, auto&& Other)
-		{
-			#ifdef _DEBUG
-				if (Other.rows() != 1 && Other.cols() != 1 || Other(0, 0) >= Me.rows() * Me.cols())
-					util::error<std::out_of_range>("Invalid Rows or Cols");
-			#endif
+	std::visit([&](auto&& Me, auto&& Other) {
+		#ifdef _DEBUG
+			if (isFloat(other._type))
+				util::error<std::invalid_argument>("Index cannot be float");
+		#endif				
+			std::decay_t<decltype(Me)> tmp{ Other.rows(), Other.cols() };
 
-			#ifdef _DEBUG
-				else if (!isInt(other._type))
-					util::error<std::invalid_argument>("Tyep is not int");
-			#endif
-			
-				else
-				{
-					std::decay_t<decltype(Me)> tmp{1, 1};
+			for (size_t i = 0; i < Other.rows(); ++i)
+				for (size_t j = 0; j < Other.cols(); ++j)						
+						tmp(i, j) = Me(Other(i, j));
 
-					for (size_t i = 0, sr = Me.rows();i < sr; ++i)
-						for (size_t j = 0, sc = Me.cols(); j < sc; ++j)
-						{
-							if ((i * sc + j) == Other(0, 0))
-							{
-								tmp(0, 0) = Me(i, j);
-								newValue._value = tmp;
-								break;
-							}
-						}
-				}
-			},_value, other._value);
+
+			newValue._value = tmp;
+
+		},_value, other._value);
 	
 	return newValue;
 }
@@ -300,86 +286,68 @@ calc::ast::Expression::Value::operator ()(const Value& other) const
 calc::ast::Expression::Value
 calc::ast::Expression::Value::operator ()(const Value& l1, const Value& l2) const
 {
-	// TODO
-	// Ele vai devolver i elemento localizado na linha x e na coluna y.
-	// Se ele tiver matrix vazia, devolve essa matriz vazia
-	// a(1:2, [3,0,2]) ela tem q se restringir da linha 1 at� 2 e devolver as colunas 3, 0 e 2 e devolve uma submatriz de qualquer tipo
-	// Para [3, 0 ,2 ] ele s� pode ser vetor, ou seja, n�o pode ter mais do que 1 linha, se n�o � erro
-	/*Expression::Value newValue;
-	
-	std::visit([&](auto&& Me, auto&& Otherl, auto&& Otherc)
-		{
-			#ifdef _DEBUG	
-			if (Me.rows() < Otherl(0, 0) || Me.cols() < Otherc(0, 0))
-					util::error<std::length_error>("Rows or Cols is invalid");
-			#endif
-			
-			if (isVoid(l1._type) || isVoid(l2._type))
-			{
-				std::decay_t<decltype(Me)> tmp{};
-				newValue._value = tmp;
-			}
+	Expression::Value newValue{*this};
 
-			std::decay_t<decltype(Me)> tmp{1, 1};
+	std::visit([&](auto&& Me, auto&& L1, auto&& L2) {
+#ifdef _DEBUG
+		if (isFloat(l1._type))
+			util::error<std::invalid_argument>("Left index cannot be float");
+		if (isFloat(l2._type))
+			util::error<std::invalid_argument>("Right index cannot be float");
+#endif	
+		const auto sL1 = L1.rows() * L1.cols();
+		const auto sL2 = L2.rows() * L2.cols();
+		std::decay_t<decltype(Me)> tmp{ sL1, sL2 };
+				
+		for (size_t i = 0; i < sL1; ++i)
+			for (size_t j = 0; j < sL2; ++j)
+				tmp(i, j) = Me(L1(i), L2(j));
 
-			tmp(0,0) = Me(Otherl(0, 0), Otherc(0, 0));
-			newValue._value = tmp;
-
+		newValue._value = tmp;
 
 		}, _value, l1._value, l2._value);
-	
-	return newValue;*/
-	return *this;
-}
-
-calc::ast::Expression::Value
-calc::ast::Expression::Value::rows(const Value& r) const
-{
-	Expression::Value newValue;
-	std::visit([&](auto&& Me, auto&& OtherR)
-		{			
-			#ifdef _DEBUG
-				if (OtherR.rows() != 1 && OtherR.cols() != 1)
-					util::error<std::length_error>("Rows and Cols must be one");
-			#endif
-			
-				else
-				{
-					std::decay_t<decltype(Me)> tmp{1, Me.cols()};
-					for(size_t j = 0, sc = Me.cols(); j < sc; ++j)
-					{
-						tmp(0, j) = Me(OtherR(0,0), j);
-						newValue._value = tmp;
-					}
-				}
-
-		}, _value, r._value);
 
 	return newValue;
 }
 
 calc::ast::Expression::Value
-calc::ast::Expression::Value::cols(const Value& c) const
+calc::ast::Expression::Value::rows(const Value& other) const
 {
-	Expression::Value newValue;
-	std::visit([&](auto&& Me, auto&& OtherR)
-		{
+	Expression::Value newValue{*this};
+	std::visit([&](auto&& Me, auto&& Other) {
 #ifdef _DEBUG
-			if (OtherR.rows() != 1 && OtherR.cols() != 1)
-				util::error<std::length_error>("Rows and Cols must be one");
+		if (isFloat(other._type))
+			util::error<std::invalid_argument>("Index cannot be float");
 #endif
+		std::decay_t<decltype(Me)> tmp{ Other.cols(), Me.cols() };
 
-			else
-			{
-				std::decay_t<decltype(Me)> tmp{Me.rows(), 1};
-				for (size_t i = 0, sr = Me.rows(); i < sr; ++i)
-				{
-					tmp(i, 0) = Me(i, OtherR(0, 0));
-					newValue._value = tmp;
-				}
-			}
+		for (size_t j = 0; j < Other.cols(); ++j)
+			for (size_t i = 0; i < Me.cols(); ++i)
+				tmp(j, i) = Me(Other(0, j), i);
 
-		}, _value, c._value);
+		newValue._value = tmp;
+		}, _value, other._value);
+
+	return newValue;
+}
+
+calc::ast::Expression::Value
+calc::ast::Expression::Value::cols(const Value& other) const
+{
+	Expression::Value newValue{*this};
+	std::visit([&](auto&& Me, auto&& Other) {
+#ifdef _DEBUG
+			if (isFloat(other._type))
+				util::error<std::invalid_argument>("Index cannot be float");
+#endif
+			std::decay_t<decltype(Me)> tmp{ Me.rows(), Other.cols() };
+
+			for (size_t j = 0; j < Other.cols(); ++j)
+				for (size_t i = 0; i < Me.rows(); ++i)
+					tmp(i, j) = Me(i, Other(0, j));
+			
+			newValue._value = tmp;
+		}, _value, other._value);
 
 	return newValue;
 }
@@ -387,20 +355,65 @@ calc::ast::Expression::Value::cols(const Value& c) const
 calc::ast::Expression::Value
 calc::ast::Expression::Value::vector() const
 {
-	// TODO
-	return *this;
+	Expression::Value newValue{*this};
+
+	std::visit([&](auto&& Me) {
+
+		newValue._value = Me.linearize();
+
+		}, _value);
+
+	return newValue;
 }
 
 void
-calc::ast::Expression::Value::set(const Value&, const Value&)
+calc::ast::Expression::Value::set(const Value& index, const Value& val)
 {
-	// TODO
+	std:visit([&](auto&& Me, auto&& Index, auto&& Val) {
+
+#ifdef _DEBUG
+			if (isFloat(index._type))
+				util::error<std::invalid_argument>("Index cannot be float");
+#endif	
+
+			const auto sVal = Val.rows() * Val.cols();
+			const auto sInd = Index.rows() * Index.cols();
+	
+			if (sVal != 1)
+				for (size_t i = 0; i < sVal; ++i)
+					Me(Index(i)) = Val(i);
+			else
+				for (size_t i = 0; i < sInd; ++i)
+					Me(Index(i)) = Val(0, 0);
+
+		}, _value, index._value, val._value);
 }
 
 void
-calc::ast::Expression::Value::set(const Value&, const Value&, const Value&)
+calc::ast::Expression::Value::set(const Value& l1, const Value& l2, const Value& val)
 {
-	// TODO
+	std:visit([&](auto&& Me, auto&& L1, auto&& L2, auto&& Val) {
+
+#ifdef _DEBUG
+		if (isFloat(l1._type))
+			util::error<std::invalid_argument>("Left index cannot be float");
+		if (isFloat(l2._type))
+			util::error<std::invalid_argument>("Right index cannot be float");
+#endif	
+
+		const auto sVal = Val.rows() * Val.cols();
+		const auto sInd = L1.rows() * L2.rows();		
+
+		if (sVal != 1)
+			for (size_t i = 0; i < L1.rows(); ++i)
+				for (size_t j = 0; j < L2.rows(); ++j)
+					Me(L1(0, i), L2(0, j)) = Val(L1(i), L2(j));
+		else
+			for (size_t i = 0; i < L1.rows(); ++i)
+				for (size_t j = 0; j < L2.rows(); ++j)
+					Me(L1(0, i), L2(j, 0)) = Val(0, 0);
+
+	}, _value, l1._value, l2._value, val._value);
 }
 
 void
@@ -416,9 +429,9 @@ calc::ast::Expression::Value::setCols(const Value&, const Value&)
 }
 
 void
-calc::ast::Expression::Value::setVector(const Value&)
+calc::ast::Expression::Value::setVector(const Value& other)
 {
-	// TODO
+	*this = other.vector();
 }
 
 void
