@@ -437,39 +437,44 @@ calc::ast::Expression::Value::set(const Value& l1, const Value& l2, const Value&
 void
 calc::ast::Expression::Value::setRows(const Value& index, const Value& other)
 {
-	// TODO
-	//a([0,1],:)
-	// Igual rows porem atribuindo valores
+	std::visit([&](auto&& Me, auto&& Index, auto&& Other) {
 
-
-	std::visit([&](auto&& Me, auto&& Index, auto&& Other)
-		{
+		const auto sOther{ Other.rows() * Other.cols() };
 #ifdef _DEBUG
-			if (Other.rows() && Other.cols() != 1)
-				util::error<std::length_error>("Value must be a scalar number");
+		if (sOther != 1 && Other.cols() != Index.cols())
+			util::error<std::length_error>("Value must be a scalar number or an expression of same size index");
 #endif
+		if (sOther != 1)
+			for (size_t i = 0, sr = Index.cols(); i < sr; ++i)
+				for (size_t j = 0, sc = Me.cols(); j < sc; ++j)
+					Me(Index(0, i), j) = Other(0, i);
+		else
 			for (size_t i = 0, sr = Index.cols(); i < sr; ++i)
 				for (size_t j = 0, sc = Me.cols(); j < sc; ++j)
 					Me(Index(0, i), j) = Other(0, 0);
+
 		}, _value, index._value, other._value);
 }
 
 void
 calc::ast::Expression::Value::setCols(const Value& index, const Value& other)
 {
-	// TODO
-	//a(:,[0,1])
-	// Igual cols porem atribuindo valores
+	std::visit([&](auto&& Me, auto&& Index, auto&& Other) {
 
-	std::visit([&](auto&& Me, auto&& Index, auto&& Other)
-		{
+		const auto sOther{ Other.rows() * Other.cols() };
 #ifdef _DEBUG
-			if (Other.rows() && Other.cols() != 1)
-				util::error<std::length_error>("Value must be a scalar number");
+			if (sOther != 1 && Other.cols() != Index.cols())
+				util::error<std::length_error>("Value must be a scalar number or an expression of same size index");
 #endif
-			for (size_t i = 0, sr = Me.rows(); i < sr; ++i)
-				for (size_t j = 0, sc = Index.cols(); j < sc; ++j)
-					Me(i, Index(0, j)) = Other(0, 0);
+			if (sOther != 1)				
+				for (size_t i = 0, sr = Me.rows(); i < sr; ++i)
+					for (size_t j = 0, sc = Index.cols(); j < sc; ++j)
+						Me(i, Index(0, j)) = Other(0, j);
+			else
+				for (size_t i = 0, sr = Me.rows(); i < sr; ++i)
+					for (size_t j = 0, sc = Index.cols(); j < sc; ++j)
+						Me(i, Index(0, j)) = Other(0, 0);
+
 		}, _value, index._value, other._value);
 }
 
@@ -503,6 +508,9 @@ calc::ast::Expression::Value::colon(const Value& from, const Value& to, const Va
 				util::error<std::logic_error>("Step argument must be a single number");
 			else if (To.cols() != 1 || To.rows() != 1)
 				util::error<std::logic_error>("Second argument must be a single number");
+
+			if (From(0, 0) > To(0, 0))
+				util::error<std::length_error>("Start value must be greater than final value");
 		#endif // _DEBUG
 
 			std::decay_t<decltype(From(0))> start{From(0)};
