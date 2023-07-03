@@ -23,7 +23,6 @@ add_executable(calc
   include/ast/Expression.h
   include/ast/ExpressionList.h
   include/ast/ExpressionStatement.h
-  #include/ast/ExpressionValue.h
   include/ast/FloatLiteral.h
   include/ast/FunctionDeclaration.h
   include/ast/IntLiteral.h
@@ -78,7 +77,3 @@ add_executable(calc
   src/symbol/Symbol.cpp 
   include/ast/MyExpressionValue.h
   src/ast/MyExpressionValue.cpp)
-
-  add_executable(teste
-  src/teste.cpp
-  include/Matrix.h)
