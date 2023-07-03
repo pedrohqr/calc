@@ -392,6 +392,7 @@ calc::ast::Expression::Value::set(const Value& index, const Value& val)
 void
 calc::ast::Expression::Value::set(const Value& l1, const Value& l2, const Value& val)
 {
+
 	std:visit([&](auto&& Me, auto&& L1, auto&& L2, auto&& Val) {
 
 #ifdef _DEBUG
@@ -402,30 +403,57 @@ calc::ast::Expression::Value::set(const Value& l1, const Value& l2, const Value&
 #endif	
 
 		const auto sVal = Val.rows() * Val.cols();
-		const auto sInd = L1.rows() * L2.rows();		
-
+		const auto sInd = L1.cols() * L2.cols();		
+		
 		if (sVal != 1)
-			for (size_t i = 0; i < L1.rows(); ++i)
-				for (size_t j = 0; j < L2.rows(); ++j)
-					Me(L1(0, i), L2(0, j)) = Val(L1(i), L2(j));
+			for (size_t i = 0; i < L1.cols(); ++i)
+				for (size_t j = 0; j < L2.cols(); ++j)
+					Me(L1(0, i), L2(0, j)) = Val(i, j);
 		else
-			for (size_t i = 0; i < L1.rows(); ++i)
-				for (size_t j = 0; j < L2.rows(); ++j)
-					Me(L1(0, i), L2(j, 0)) = Val(0, 0);
+			for (size_t i = 0; i < L1.cols(); ++i)
+				for (size_t j = 0; j < L2.cols(); ++j)
+					Me(L1(0, i), L2(0, j)) = Val(0, 0);
 
 	}, _value, l1._value, l2._value, val._value);
 }
 
 void
-calc::ast::Expression::Value::setRows(const Value&, const Value&)
+calc::ast::Expression::Value::setRows(const Value& index, const Value& other)
 {
 	// TODO
+	//a([0,1],:)
+	// Igual rows porem atribuindo valores
+
+
+	std::visit([&](auto&& Me, auto&& Index, auto&& Other)
+		{
+#ifdef _DEBUG
+			if (Other.rows() && Other.cols() != 1)
+				util::error<std::length_error>("Value must be a scalar number");
+#endif
+			for (size_t i = 0, sr = Index.cols(); i < sr; ++i)
+				for (size_t j = 0, sc = Me.cols(); j < sc; ++j)
+					Me(Index(0, i), j) = Other(0, 0);
+		}, _value, index._value, other._value);
 }
 
 void
-calc::ast::Expression::Value::setCols(const Value&, const Value&)
+calc::ast::Expression::Value::setCols(const Value& index, const Value& other)
 {
 	// TODO
+	//a(:,[0,1])
+	// Igual cols porem atribuindo valores
+
+	std::visit([&](auto&& Me, auto&& Index, auto&& Other)
+		{
+#ifdef _DEBUG
+			if (Other.rows() && Other.cols() != 1)
+				util::error<std::length_error>("Value must be a scalar number");
+#endif
+			for (size_t i = 0, sr = Me.rows(); i < sr; ++i)
+				for (size_t j = 0, sc = Index.cols(); j < sc; ++j)
+					Me(i, Index(0, j)) = Other(0, 0);
+		}, _value, index._value, other._value);
 }
 
 void
