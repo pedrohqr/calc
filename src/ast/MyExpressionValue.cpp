@@ -97,31 +97,18 @@ calc::ast::Expression::Value::operator -(const Value& other) const
 calc::ast::Expression::Value
 calc::ast::Expression::Value::operator *(const Value& other) const
 {
-	// TODO
-	Expression::Value tmp{*this};
+	Expression::Value newValue{*this};
 
-	if (isInt(_type) && isInt(other._type))
-	{
-		if (std::get<IntMatrix>(_value).cols() != std::get<IntMatrix>(other._value).rows())
-			throw std::length_error("Cols and Rows differents");
-		tmp._value = std::get<IntMatrix>(_value) * std::get<IntMatrix>(other._value);
-	}
-	else if (isFloat(_type) && isFloat(other._type))
-	{
-		if (std::get<FloatMatrix>(_value).cols() != std::get<FloatMatrix>(other._value).rows())
-			throw std::length_error("Cols and Rows differents");
-		tmp._value = std::get<FloatMatrix>(_value) * std::get<FloatMatrix>(other._value);
-	}
-	else if (isFloat(_type) && isInt(other._type))
-	{
-		if (std::get<FloatMatrix>(_value).cols() != std::get<IntMatrix>(other._value).rows())
-			throw std::length_error("Cols and Rows differents");
-		tmp._value = std::get<FloatMatrix>(_value) * std::get<FloatMatrix>(other.castTo(_type)._value);
-	}
-	else if (isInt(_type) && isFloat(other._type))
-		throw std::bad_cast();
+	std::visit([&](auto&& Me, auto&& Other) {
 
-	return tmp;
+			newValue._value = Me * Other;
+
+			if (_type != other._type)
+				newValue._type = Type::Float();
+
+		}, _value, other._value);
+
+	return newValue;
 }
 
 calc::ast::Expression::Value
@@ -131,19 +118,27 @@ calc::ast::Expression::Value::operator /(const Value& other) const
 	newValue._type = Type::Float();	
 
 	std::visit([&](auto&& Me, auto&& Other) {
+
+			const auto sOther = Other.rows() * Other.cols();
+			const auto sMe = Me.rows() * Me.cols();
+
 		#ifdef _DEBUG
-			if (Other.rows() != 1 || Other.cols() != 1)
-				util::error<std::logic_error>("Invalid value to divide");
+			if (sOther != 1 && (Other.rows() != Me.rows() || Other.cols() != Me.cols()))
+				util::error<std::logic_error>("Second expression must be a scalar or an expression of same lenght of primary");
 		#endif // _DEBUG
 
 			newValue._value = FloatMatrix{ Me.rows(), Me.cols() };
 
-			std::decay_t<decltype(Other(0, 0))> sValue{ Other(0, 0) };
+			if (sOther != 1)
+				for (size_t i = 0; i < sOther; ++i)
+					std::get<FloatMatrix>(newValue._value)(i) = static_cast<float>(Me(i) / Other(i));
+			else
+			{
+				std::decay_t<decltype(Other(0, 0))> sValue{ Other(0, 0) };
 
-			for (size_t i = 0; i < Me.rows(); ++i)
-				for (size_t j = 0; j < Me.cols(); ++j)
-					std::get<FloatMatrix>(newValue._value)(i, j) = static_cast<float>(Me(i, j)) / sValue ;
-
+				for (size_t i = 0; i < sMe; ++i)
+					std::get<FloatMatrix>(newValue._value)(i) = static_cast<float>(Me(i) / sValue);
+			}
 		}, _value, other._value);
 
 	return newValue;
@@ -200,12 +195,13 @@ calc::ast::Expression::Value::horzcat(const Value& other) const
 {
 	if (isVoid(_type))
 		return Expression::Value{other};
-	else if (_type == other._type)
-	{
-		Expression::Value newValue{*this};
+	
+	Expression::Value newValue{*this};	
 
-		std::visit([&](auto&& Me, auto&& Other) {
+	std::visit([&](auto&& Me, auto&& Other) {
 
+			if (_type == other._type)
+			{
 				std::decay_t<decltype(Me)> tmp{ Me.rows(), Me.cols() + Other.rows() };
 
 				for (size_t i = 0, r = Me.rows(); i < r; ++i)
@@ -213,18 +209,28 @@ calc::ast::Expression::Value::horzcat(const Value& other) const
 						if (j < Me.cols())
 							tmp(i, j) = Me(i, j);
 						else
-							tmp(i, j) = Other(i , j - Me.cols());
+							tmp(i, j) = Other(i, j - Me.cols());
 
 				newValue._value = tmp;
+			}
+			else
+			{
+				newValue._type = Type::Float();
+				FloatMatrix tmp{ Me.rows(), Me.cols() + Other.rows() };
 
-			}, _value, other._value);
+				for (size_t i = 0, r = Me.rows(); i < r; ++i)
+					for (size_t j = 0; j < Me.cols() + Other.cols(); ++j)
+						if (j < Me.cols())
+							tmp(i, j) = static_cast<float>(Me(i, j));
+						else
+							tmp(i, j) = static_cast<float>(Other(i, j - Me.cols()));
 
-		return newValue;
-	}
-	else
-		util::error("Matrix value must be same type");
+				newValue._value = tmp;
+			}
 
-	return *this;
+		}, _value, other._value);
+
+	return newValue;
 }
 
 calc::ast::Expression::Value
@@ -232,31 +238,42 @@ calc::ast::Expression::Value::vertcat(const Value& other) const
 {
 	if (isVoid(_type))
 		return Expression::Value{other};
-	else if (_type == other._type)
-	{
-		Expression::Value newValue{*this};
-
-		std::visit([&](auto&& Me, auto&& Other) {
-
-			std::decay_t<decltype(Me)> tmp{ Me.rows() + Other.rows(), Me.cols() };
-
-			for (size_t i = 0, r = Me.rows() + Other.rows(); i < r; ++i)
-				for (size_t j = 0; j < Me.cols(); ++j)
-					if (i < Me.rows())
-						tmp(i, j) = Me(i, j);
-					else
-						tmp(i, j) = Other(i - Me.rows(), j);
-
-			newValue._value = tmp;
-
-			}, _value, other._value);
-
-		return newValue;
-	}
-	else
-		util::error("Matrix value must be same type");
 	
-	return *this;
+	Expression::Value newValue{*this};
+
+	std::visit([&](auto&& Me, auto&& Other) {
+
+			if (_type == other._type)
+			{
+				std::decay_t<decltype(Me)> tmp{ Me.rows() + Other.rows(), Me.cols() };
+
+				for (size_t i = 0, r = Me.rows() + Other.rows(); i < r; ++i)
+					for (size_t j = 0; j < Me.cols(); ++j)
+						if (i < Me.rows())
+							tmp(i, j) = Me(i, j);
+						else
+							tmp(i, j) = Other(i - Me.rows(), j);
+
+				newValue._value = tmp;
+			}
+			else
+			{
+				newValue._type = Type::Float();
+				FloatMatrix tmp{ Me.rows() + Other.rows(), Me.cols() };
+
+				for (size_t i = 0, r = Me.rows() + Other.rows(); i < r; ++i)
+					for (size_t j = 0; j < Me.cols(); ++j)
+						if (i < Me.rows())
+							tmp(i, j) = static_cast<float>(Me(i, j));
+						else
+							tmp(i, j) = static_cast<float>(Other(i - Me.rows(), j));
+
+				newValue._value = tmp;
+			}			
+
+		}, _value, other._value);
+
+	return newValue;
 }
 
 calc::ast::Expression::Value
@@ -402,7 +419,7 @@ calc::ast::Expression::Value::set(const Value& l1, const Value& l2, const Value&
 #endif	
 
 		const auto sVal = Val.rows() * Val.cols();
-		const auto sInd = L1.rows() * L2.rows();		
+		const auto sInd = L1.rows() * L2.rows();
 
 		if (sVal != 1)
 			for (size_t i = 0; i < L1.rows(); ++i)

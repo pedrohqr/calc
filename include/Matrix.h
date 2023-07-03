@@ -93,6 +93,7 @@ public:
 
   template<typename U> Matrix<float> operator +(const Matrix<U>& other) const;
   template<typename U> Matrix<float> operator -(const Matrix<U>& other) const;
+  template<typename U> Matrix<float> operator *(const Matrix<U>& other) const;
 
   Matrix operator +(const Matrix&) const;
   Matrix operator -(const Matrix&) const;
@@ -373,6 +374,31 @@ Matrix<T>::operator *(const Matrix& other) const
             T sum = 0;
             for (size_t k = 0; k < _n; ++k) {
                 sum += (*this)(i, k) * other(k, j);
+            }
+            result(i, j) = sum;
+        }
+    }
+
+    return result;
+}
+
+template<typename T>
+template<typename U>
+Matrix<float>
+Matrix<T>::operator *(const Matrix<U>& other) const
+{
+#ifdef _DEBUG
+    if (_n != other.rows())
+        matrixDimensionMustAgree(_m, _n, other.rows(), other.cols());
+#endif // _DEBUG
+
+    Matrix<float> result{ _m, other.cols() };
+
+    for (size_t i = 0; i < _m; ++i) {
+        for (size_t j = 0; j < other.cols(); ++j) {
+            float sum = 0;
+            for (size_t k = 0; k < _n; ++k) {
+                sum += static_cast<float>((*this)(i, k)) * static_cast<float>(other(k, j));
             }
             result(i, j) = sum;
         }
