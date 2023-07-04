@@ -115,7 +115,16 @@ Reference::eval(Frame* frame) const
     }
     return v;
   }
-  // TODO
+  // TODO 
+  /*else if (function != nullptr)
+  {      
+      for (auto arg : _arguments)
+      {
+          auto v = arg->eval(frame);
+          function->name();
+          puts("sim");
+      }
+  }*/
   return Value{};
 }
 

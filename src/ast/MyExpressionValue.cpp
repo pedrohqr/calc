@@ -191,6 +191,27 @@ calc::ast::Expression::Value::transpose() const
 }
 
 calc::ast::Expression::Value
+calc::ast::Expression::Value::identity(const Value& l1, const Value& l2)
+{
+	Expression::Value newValue{};
+
+	std::visit([&](auto&& Me, auto&& L1, auto&& L2) {
+#ifdef _DEBUG
+		if (L1.rows() * L1.cols() != 1 || L2.rows() * L2.cols() != 1)
+			util::error<std::length_error>("Invalid size to identity");
+		else if (!isInt(l1._type) || !isInt(l2._type))
+			util::error<std::logic_error>("Size parameter must be integer");
+#endif // _DEBUG		
+
+		newValue._value = Me.identity((size_t)L1(0, 0), (size_t)L2(0, 0));
+		newValue._type = Type::Int();
+
+		}, newValue._value, l1._value, l2._value);
+
+	return newValue;
+}
+
+calc::ast::Expression::Value
 calc::ast::Expression::Value::horzcat(const Value& other) const
 {
 	if (isVoid(_type))

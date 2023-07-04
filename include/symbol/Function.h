@@ -48,7 +48,7 @@ class Function: public Symbol
 {
 public:
   using Parameters = util::ObjectPtrList<Variable>;
-
+  //using Code = std::function<bool(FunctionFrame&)>;
   Function(const String& name):
     Symbol{name}
   {
@@ -58,8 +58,14 @@ public:
   Function(ast::FunctionDeclaration* f):
     Symbol{f->name()}
   {
-    // TODO
-    f->function = this;
+      // TODO
+      for (auto p : f->parameters())
+        _parameters.add(new Variable{ p->name() });
+
+      for (auto o : f->output())
+          _output.add(new Variable{ o->name() });
+
+      f->function = this;
   }
 
   auto& parameters()

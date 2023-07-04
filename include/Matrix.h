@@ -104,6 +104,8 @@ public:
 
   Matrix transpose() const;
   Matrix linearize() const;
+  static Matrix identity(size_t, size_t);
+  static Matrix set_for_all(T, size_t, size_t);
   void print(calc::Writer&) const;
 
 private:
@@ -458,6 +460,35 @@ Matrix<T>::linearize() const
 
     for (size_t i = 0, s = _m * _n; i < s; ++i)
         result(i) = _data[i];
+
+    return result;
+}
+
+template<typename T>
+Matrix<T>
+Matrix<T>::identity(size_t m, size_t n)
+{
+    Matrix<T> result{ m, n };
+
+    for (size_t i = 0; i < m; ++i)
+        for (size_t j = 0; j < n; ++j)
+            if (i == j)
+                result(i, j) = 1;
+            else
+                result(i, j) = 0;
+
+    return result;
+}
+
+template<typename T>
+Matrix<T>
+Matrix<T>::set_for_all(T k, size_t m, size_t n)
+{
+    Matrix<T> result{ m, n };
+
+    for (size_t i = 0; i < m; ++i)
+        for (size_t j = 0; j < n; ++j)
+                result(i, j) = k;
 
     return result;
 }

@@ -53,8 +53,24 @@ namespace ast
 // =========
 class Parameter: public Declaration
 {
-public:
+public:  
   using Declaration::Declaration;
+
+  Parameter(const String& name) :
+      Declaration{name}
+  {
+      // do nothing
+  }
+
+  void resolve(Scope*) override
+  {
+
+  }
+
+  JumpCode execute(Frame*) const override
+  {
+      return JumpCode::NEXT;
+  }
 
 }; // Parameter
 

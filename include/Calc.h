@@ -56,6 +56,12 @@ public:
     _input{""}
   {
     StringBuffer::makeUse(&_input);
+
+    auto* func_decl = new FunctionDeclaration{};
+    func_decl->setName("eye");
+    func_decl->parameters().add(new Parameter{"m"});
+    func_decl->parameters().add(new Parameter{ "n" });
+    _globals.buildFunction(func_decl);
   }
 
   auto execute(const char* line) try

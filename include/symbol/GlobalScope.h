@@ -48,8 +48,8 @@ class GlobalScope: public Scope, public Frame
 public:
   GlobalScope():
     Frame{this}
-  {
-    // do nothing
+  {   
+      // do nothing      
   }
 
   void clear()

@@ -76,4 +76,5 @@ add_executable(calc
   src/symbol/Scope.cpp
   src/symbol/Symbol.cpp 
   include/ast/MyExpressionValue.h
-  src/ast/MyExpressionValue.cpp)
+  src/ast/MyExpressionValue.cpp 
+  include/ast/FunctionFrame.h)

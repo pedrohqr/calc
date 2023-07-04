@@ -48,6 +48,7 @@ namespace calc
 
             Value size() const;
             Value transpose() const;
+            static Value identity(const Value&, const Value&);
 
             Value horzcat(const Value&) const;
             Value vertcat(const Value&) const;
