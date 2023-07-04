@@ -4,82 +4,23 @@ namespace calc::symbol
 {
 
 bool
-eye(Frame& frame, const ExpressionList& args, Expression::Value& out)
+eye(Frame&)
 {
-	if (args.size() == 1)
-	{
-		auto a = args.begin();
-		auto i = a->eval(&frame);
-		out = Expression::Value::identity(i, i);
-	}
-	else if (args.size() == 2)
-	{
-		auto a = args.begin();
-		auto i = a->eval(&frame);
-		++a;
-		auto j = a->eval(&frame);
-		out = Expression::Value::identity(i, j);
-	}
-	else
-		return false;
+	puts("eye");
 	return true;
 }
 
 bool
-zeros(Frame& frame, const ExpressionList& args, Expression::Value& out)
+zeros(Frame&)
 {
-	if (args.size() == 1)
-	{
-		auto a = args.begin();
-		auto i = a->eval(&frame);
-		out = Expression::Value::zeros(i, i);
-	}
-	else if (args.size() == 2)
-	{
-		auto a = args.begin();
-		auto i = a->eval(&frame);
-		++a;
-		auto j = a->eval(&frame);
-		out = Expression::Value::zeros(i, j);
-	}
-	else
-		return false;
+	puts("zeros");
 	return true;
 }
 
 bool
-ones(Frame& frame, const ExpressionList& args, Expression::Value& out)
+ones(Frame&)
 {
-	if (args.size() == 1)
-	{
-		auto a = args.begin();
-		auto i = a->eval(&frame);
-		out = Expression::Value::ones(i, i);
-	}
-	else if (args.size() == 2)
-	{
-		auto a = args.begin();
-		auto i = a->eval(&frame);
-		++a;
-		auto j = a->eval(&frame);
-		out = Expression::Value::ones(i, j);
-	}
-	else
-		return false;
-	return true;
-}
-
-bool
-diag(Frame& frame, const ExpressionList& args, Expression::Value& out)
-{
-	if (args.size() == 1)
-	{
-		auto a = args.begin();
-		auto i = a->eval(&frame);
-		out = Expression::Value::diag(i);
-	}
-	else
-		return false;
+	puts("ones");
 	return true;
 }
 

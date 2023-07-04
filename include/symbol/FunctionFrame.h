@@ -11,41 +11,30 @@
 
 #include "Frame.h"
 #include "ast/MyExpressionValue.h"
-#include "ast/Reference.h"
 #include "MiscFunctions.h"
 
 namespace calc
 {
 using namespace ast;
 
-using ValueFunc = std::function<bool(Frame&, const ExpressionList&, Expression::Value&)>;
+using ValueFunc = std::function<bool(Frame&)>;
+//using Code = std::function<bool(FunctionFrame&)>;
 
 class FunctionFrame
 {
 public:
-	FunctionFrame(Frame& frame, const ExpressionList& args):
-		_frame{frame},
-		_args{args}
+	bool callBuiltInFunction(const String& funcName, Frame& frame)
 	{
-		// do nothing
-	}
-
-	inline
-	bool callBuiltInFunction(const String& funcName, Expression::Value& value)
-	{		
 		if (builtinFunctions.count(funcName) > 0)
-			return builtinFunctions[funcName](_frame, _args, value);
+			return builtinFunctions[funcName](frame);
 		return false;
 	}
 private:
-	Frame& _frame;
-	const ExpressionList& _args;
 	std::map<String, ValueFunc> builtinFunctions =
 	{
 		{"eye", eye},
 		{"zeros", zeros},
-		{"ones", ones},
-		{"diag", diag}
+		{"ones", ones}
 	};
 };
 
