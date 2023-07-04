@@ -56,6 +56,11 @@ public:
     _input{""}
   {
     StringBuffer::makeUse(&_input);
+
+    addEye();
+    addZeros();
+    addOnes();
+    addDiag();
   }
 
   auto execute(const char* line) try
@@ -79,6 +84,44 @@ private:
     T_EXIT
   };
 
+  void addEye()
+  {
+      auto* func_decl = new FunctionDeclaration{};
+      func_decl->setName("eye");
+      func_decl->parameters().add(new Parameter{ "m" });
+      func_decl->parameters().add(new Parameter{ "n" });
+      func_decl->output().add(new Parameter{ "o" });
+      _globals.buildFunction(func_decl);
+  }
+
+  void addZeros()
+  {
+      auto* funcDecl = new FunctionDeclaration{};
+      funcDecl->setName("zeros");
+      funcDecl->parameters().add(new Parameter{ "m" });
+      funcDecl->parameters().add(new Parameter{ "n" });
+      funcDecl->output().add(new Parameter{ "o" });
+      _globals.buildFunction(funcDecl);
+  }
+
+  void addOnes()
+  {
+      auto* funcDecl = new FunctionDeclaration{};
+      funcDecl->setName("ones");
+      funcDecl->parameters().add(new Parameter{ "m" });
+      funcDecl->parameters().add(new Parameter{ "n" });
+      funcDecl->output().add(new Parameter{ "o" });
+      _globals.buildFunction(funcDecl);
+  }
+
+  void addDiag()
+  {
+      auto* funcDecl = new FunctionDeclaration{};
+      funcDecl->setName("diag");
+      funcDecl->parameters().add(new Parameter{ "m" });
+      funcDecl->output().add(new Parameter{ "o" });
+      _globals.buildFunction(funcDecl);
+  }
   StringBuffer _input;
   GlobalScope _globals;
   Writer _writer;

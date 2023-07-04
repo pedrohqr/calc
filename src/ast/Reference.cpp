@@ -37,7 +37,7 @@
 
 namespace calc::ast
 { // begin namespace calc::ast
-
+    
 inline auto
 isColonAtom(Expression* e)
 {
