@@ -50,6 +50,9 @@ add_executable(calc
   include/util/LinkedList.h
   include/util/ObjectPtrList.h
   include/util/SharedObject.h
+  include/ast/MyExpressionValue.h
+  include/symbol/FunctionFrame.h 
+  include/symbol/MiscFunctions.h
   src/Frame.cpp
   src/Main.cpp
   src/ProblemReporter.cpp
@@ -75,6 +78,5 @@ add_executable(calc
   src/symbol/GlobalScope.cpp
   src/symbol/Scope.cpp
   src/symbol/Symbol.cpp 
-  include/ast/MyExpressionValue.h
-  src/ast/MyExpressionValue.cpp 
-  include/ast/FunctionFrame.h)
+  src/ast/MyExpressionValue.cpp  
+  src/symbol/MiscFunctions.cpp)

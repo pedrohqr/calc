@@ -33,6 +33,7 @@
 #include "ast/ColonAtom.h"
 #include "Frame.h"
 #include "ProblemReporter.h"
+#include "symbol/FunctionFrame.h"
 
 namespace calc::ast
 { // begin namespace calc::ast
@@ -116,15 +117,12 @@ Reference::eval(Frame* frame) const
     return v;
   }
   // TODO 
-  /*else if (function != nullptr)
-  {      
-      for (auto arg : _arguments)
-      {
-          auto v = arg->eval(frame);
-          function->name();
-          puts("sim");
-      }
-  }*/
+  else if (function != nullptr)
+  {
+      FunctionFrame f;
+      f.callBuiltInFunction(function->name(), *frame);
+      puts("saiu");
+  }
   return Value{};
 }
 

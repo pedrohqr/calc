@@ -48,7 +48,7 @@ class Function: public Symbol
 {
 public:
   using Parameters = util::ObjectPtrList<Variable>;
-  //using Code = std::function<bool(FunctionFrame&)>;
+
   Function(const String& name):
     Symbol{name}
   {
@@ -63,7 +63,7 @@ public:
         _parameters.add(new Variable{ p->name() });
 
       for (auto o : f->output())
-          _output.add(new Variable{ o->name() });
+        _output.add(new Variable{ o->name() });
 
       f->function = this;
   }
