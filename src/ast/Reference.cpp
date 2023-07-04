@@ -116,12 +116,14 @@ Reference::eval(Frame* frame) const
     }
     return v;
   }
-  // TODO 
   else if (function != nullptr)
   {
-      FunctionFrame f;
-      f.callBuiltInFunction(function->name(), *frame);
-      puts("saiu");
+      Value v{};
+      FunctionFrame f{ *frame, _arguments };
+
+      f.callBuiltInFunction(function->name(), v);
+
+      return v;
   }
   return Value{};
 }
